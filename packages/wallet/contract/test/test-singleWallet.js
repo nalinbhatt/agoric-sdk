@@ -33,8 +33,7 @@ import { E, Far } from '@endo/far';
 import path from 'path';
 import { devices } from './devices.js';
 
-/** @type {import('ava').TestInterface<Awaited<ReturnType<makeTestContext>>>} */
-// @ts-expect-error cast
+/** @type {import('ava').TestFn<Awaited<ReturnType<makeTestContext>>>} */
 const test = anyTest;
 
 const setUpZoeForTest = async () => {

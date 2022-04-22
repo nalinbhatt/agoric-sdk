@@ -73,8 +73,7 @@ const micro = harden({
  *   },
  * }} RunStakeTestContext
  */
-/** @type {import('ava').TestInterface<RunStakeTestContext>} */
-// @ts-expect-error cast
+/** @type {import('ava').TestFn<RunStakeTestContext>} */
 const test = unknownTest;
 
 test.before(async t => {

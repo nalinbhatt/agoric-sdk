@@ -15,8 +15,7 @@ import { subscriptionTracker } from '../../metrics.js';
 /** @typedef {Record<string, any> & {
  *   bundleCache: Awaited<ReturnType<typeof unsafeMakeBundleCache>>,
  * }} Context */
-/** @type {import('ava').TestInterface<Context>} */
-// @ts-expect-error cast
+/** @type {import('ava').TestFn<Context>} */
 const test = unknownTest;
 
 test.before(async t => {
