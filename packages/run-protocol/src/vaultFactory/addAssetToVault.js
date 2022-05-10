@@ -2,6 +2,12 @@
 import { AmountMath, AssetKind } from '@agoric/ertp';
 import { makeRatio } from '@agoric/zoe/src/contractSupport/index.js';
 import { E } from '@endo/far';
+import { Stable } from '@agoric/vats/src/tokens.js';
+
+const IbcAsset = /** @type {const} */ ({
+  keyword: 'IbcATOM',
+  proposedName: 'ATOM',
+});
 
 const reserveThenGetNames = async (nameAdmin, names) => {
   for (const name of names) {
@@ -26,8 +32,8 @@ export const addInterchainAsset = async (
   {
     options: {
       denom,
-      keyword = 'IbcATOM',
-      proposedName = 'ATOM',
+      keyword = IbcAsset.keyword,
+      proposedName = IbcAsset.proposedName,
       decimalPlaces = 4,
     },
   },
@@ -52,8 +58,8 @@ export const addInterchainAsset = async (
     () => {}, // If the interchainMints list was rejected, ignore the error.
   );
 
-  E(E(agoricNamesAdmin).lookupAdmin('issuer')).update('IbcATOM', issuer);
-  E(E(agoricNamesAdmin).lookupAdmin('brand')).update('IbcATOM', brand);
+  E(E(agoricNamesAdmin).lookupAdmin('issuer')).update(keyword, issuer);
+  E(E(agoricNamesAdmin).lookupAdmin('brand')).update(keyword, brand);
 
   return E(bankManager).addAsset(
     denom,
@@ -69,14 +75,14 @@ export const registerScaledPriceAuthority = async ({
 }) => {
   const [
     sourcePriceAuthority,
-    [ibcAtomBrand, runBrand],
+    [ibcAtomBrand, istBrand],
     [usdBrand, atomBrand],
     [scaledPriceAuthority],
   ] = await Promise.all([
     priceAuthority,
     reserveThenGetNames(E(agoricNamesAdmin).lookupAdmin('brand'), [
-      'IbcATOM',
-      'RUN',
+      IbcAsset.keyword,
+      Stable.symbol,
     ]),
     reserveThenGetNames(E(agoricNamesAdmin).lookupAdmin('oracleBrand'), [
       'USD',
@@ -103,7 +109,7 @@ export const registerScaledPriceAuthority = async ({
     getDecimalP(atomBrand),
     getDecimalP(ibcAtomBrand),
     getDecimalP(usdBrand),
-    getDecimalP(runBrand),
+    getDecimalP(istBrand),
   ]);
 
   const scaleIn = makeRatio(
@@ -116,7 +122,7 @@ export const registerScaledPriceAuthority = async ({
     10n ** BigInt(decimalPlacesUsd),
     usdBrand,
     10n ** BigInt(decimalPlacesRun),
-    runBrand,
+    istBrand,
   );
   const terms = { sourcePriceAuthority, scaleIn, scaleOut };
   const { publicFacet } = E.get(
@@ -125,7 +131,7 @@ export const registerScaledPriceAuthority = async ({
   await E(priceAuthorityAdmin).registerPriceAuthority(
     E(publicFacet).getPriceAuthority(),
     ibcAtomBrand,
-    runBrand,
+    istBrand,
     true, // force
   );
 };
@@ -136,30 +142,31 @@ export const registerScaledPriceAuthority = async ({
 export const addAssetToVault = async ({
   consume: { vaultFactoryCreator, reserveCreatorFacet, agoricNamesAdmin, zoe },
   brand: {
-    consume: { RUN: runP },
+    consume: { [Stable.symbol]: istP },
   },
   instance: {
     consume: { amm },
   },
 }) => {
+  const { keyword } = IbcAsset;
   const [ibcAtomIssuer] = await reserveThenGetNames(
     E(agoricNamesAdmin).lookupAdmin('issuer'),
-    ['IbcATOM', 'RUN'],
+    [keyword, Stable.symbol],
   );
 
   /** @type {ERef<XYKAMMPublicFacet>} */
   const ammPub = E(zoe).getPublicFacet(amm);
-  await E(ammPub).addPool(ibcAtomIssuer, 'IbcATOM');
-  await E(reserveCreatorFacet).addIssuer(ibcAtomIssuer, 'IbcATOM');
+  await E(ammPub).addPool(ibcAtomIssuer, keyword);
+  await E(reserveCreatorFacet).addIssuer(ibcAtomIssuer, keyword);
 
-  const RUN = await runP;
+  const IST = await istP;
   await E(vaultFactoryCreator).addVaultType(ibcAtomIssuer, 'ATOM', {
-    debtLimit: AmountMath.make(RUN, 0n),
+    debtLimit: AmountMath.make(IST, 0n),
     // the rest of these are arbitrary, TBD by gov cttee
-    interestRate: makeRatio(1n, RUN),
-    liquidationMargin: makeRatio(1n, RUN),
-    liquidationPenalty: makeRatio(1n, RUN),
-    loanFee: makeRatio(1n, RUN),
+    interestRate: makeRatio(1n, IST),
+    liquidationMargin: makeRatio(1n, IST),
+    liquidationPenalty: makeRatio(1n, IST),
+    loanFee: makeRatio(1n, IST),
   });
 };
 
@@ -198,7 +205,7 @@ export const getManifestForAddAssetToVault = (
           zoe: true,
         },
         brand: {
-          consume: { RUN: true },
+          consume: { [Stable.symbol]: true },
         },
         instance: {
           consume: { amm: true },

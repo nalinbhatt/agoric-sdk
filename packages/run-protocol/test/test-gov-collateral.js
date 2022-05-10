@@ -19,13 +19,16 @@ import { extractCoreProposalBundles } from '@agoric/deploy-script-support/src/ex
 import { makeCoreProposalBehavior } from '@agoric/deploy-script-support/src/coreProposalBehavior.js';
 import { makeNameHubKit } from '@agoric/vats/src/nameHub.js';
 import { AmountMath, makeIssuerKit } from '@agoric/ertp';
+import { Stable } from '@agoric/vats/src/tokens.js';
 import { makeNodeBundleCache } from './bundleTool.js';
 import { setupBootstrap, setUpZoeForTest } from './supports.js';
 
 const { details: X } = assert;
 const dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
-/** @type {import('ava').TestInterface<Awaited<ReturnType<makeTestContext>>>} */
+/** @typedef {Awaited<ReturnType<makeTestContext>>} GovTestContext */
+/** @typedef {import('ava').ExecutionContext<GovTestContext>} GovTestCtx */
+/** @type {import('ava').TestInterface<GovTestContext>} */
 // @ts-expect-error cast
 const test = anyTest;
 
@@ -106,7 +109,7 @@ test.before(async t => {
   t.context = await makeTestContext();
 });
 
-const makeScenario = async t => {
+const makeScenario = async (/** @type {GovTestCtx} */ t) => {
   const space = await setupBootstrap(t);
 
   const loadVat = name =>
@@ -116,10 +119,10 @@ const makeScenario = async t => {
   const emptyRunPayment = async () => {
     const {
       issuer: {
-        consume: { RUN: runIssuer },
+        consume: { [Stable.symbol]: runIssuer },
       },
       brand: {
-        consume: { RUN: runBrand },
+        consume: { [Stable.symbol]: runBrand },
       },
     } = space;
     return E(E(runIssuer).makeEmptyPurse()).withdraw(
@@ -368,7 +371,7 @@ test('assets are in AMM, Vaults', async t => {
     instance: { consume: instanceP },
   } = s.space;
   const brand = await E(agoricNames).lookup('brand', 'IbcATOM');
-  const runBrand = await E(agoricNames).lookup('brand', 'RUN');
+  const runBrand = await E(agoricNames).lookup('brand', Stable.symbol);
 
   /** @type { ERef<XYKAMMPublicFacet> } */
   const ammAPI = instanceP.amm.then(i => E(zoe).getPublicFacet(i));
@@ -400,7 +403,7 @@ test('Committee can raise debt limit', async t => {
 
   const { agoricNames } = s.space.consume;
   const brand = await E(agoricNames).lookup('brand', 'IbcATOM');
-  const runBrand = await E(agoricNames).lookup('brand', 'RUN');
+  const runBrand = await E(agoricNames).lookup('brand', Stable.symbol);
 
   const { zoe } = s.space.consume;
   t.log({ purses });

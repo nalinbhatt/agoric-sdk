@@ -10,6 +10,7 @@ import {
   makeAgoricNamesAccess,
   makePromiseSpace,
 } from '@agoric/vats/src/core/utils.js';
+import { Stable } from '@agoric/vats/src/tokens.js';
 
 import * as Collect from '../../../src/collect.js';
 import {
@@ -25,6 +26,12 @@ export const setUpZoeForTest = async () => {
 
   const { zoeService, feeMintAccess: nonFarFeeMintAccess } = makeZoeKit(
     makeFakeVatAdmin(() => {}).admin,
+    undefined,
+    {
+      name: Stable.symbol,
+      assetKind: Stable.assetKind,
+      displayInfo: Stable.displayInfo,
+    },
   );
   /** @type {ERef<ZoeService>} */
   const zoe = makeFar(zoeService);
@@ -85,8 +92,8 @@ export const setupAmmServices = async (
   const ammBundle = await provideBundle(t, ammRoot, 'amm');
   installation.produce.amm.resolve(E(zoe).install(ammBundle));
 
-  brand.produce.RUN.resolve(centralR.brand);
-  issuer.produce.RUN.resolve(centralR.issuer);
+  brand.produce.IST.resolve(centralR.brand);
+  issuer.produce.IST.resolve(centralR.issuer);
 
   await Promise.all([
     startEconomicCommittee(space, electorateTerms),

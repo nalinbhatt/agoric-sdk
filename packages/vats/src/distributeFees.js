@@ -2,7 +2,6 @@
 
 import { observeNotifier } from '@agoric/notifier';
 import { E, Far } from '@endo/far';
-import { Stable } from './tokens.js';
 
 /**
  * wrapper to take the vaultFactory or AMM's creatorFacet, and make a function that
@@ -17,7 +16,7 @@ export function makeFeeCollector(zoe, creatorFacet) {
     collectFees: () => {
       const invitation = E(creatorFacet).makeCollectFeesInvitation();
       const collectFeesSeat = E(zoe).offer(invitation, undefined, undefined);
-      return E(collectFeesSeat).getPayout(Stable.symbol);
+      return E(collectFeesSeat).getPayout('RUN');
     },
   });
 }

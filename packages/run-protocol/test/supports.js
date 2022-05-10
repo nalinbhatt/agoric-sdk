@@ -9,6 +9,7 @@ import {
   makePromiseSpace,
 } from '@agoric/vats/src/core/utils.js';
 import * as utils from '@agoric/vats/src/core/utils.js';
+import { Stable } from '@agoric/vats/src/tokens.js';
 import { makeZoeKit } from '@agoric/zoe';
 import { makeFakeVatAdmin } from '@agoric/zoe/tools/fakeVatAdmin.js';
 import buildManualTimer from '@agoric/zoe/tools/manualTimer.js';
@@ -48,6 +49,12 @@ export const setUpZoeForTest = (setJig = () => {}) => {
 
   const { zoeService, feeMintAccess: nonFarFeeMintAccess } = makeZoeKit(
     makeFakeVatAdmin(setJig).admin,
+    undefined,
+    {
+      name: Stable.symbol,
+      assetKind: Stable.assetKind,
+      displayInfo: Stable.displayInfo,
+    },
   );
   /** @type {ERef<ZoeService>} */
   const zoe = makeFar(zoeService);
@@ -82,8 +89,8 @@ export const setupBootstrap = (t, optTimer = undefined) => {
   produce.agoricNamesAdmin.resolve(agoricNamesAdmin);
 
   const { brand, issuer } = spaces;
-  brand.produce.RUN.resolve(runBrand);
-  issuer.produce.RUN.resolve(runIssuer);
+  brand.produce.IST.resolve(runBrand);
+  issuer.produce.IST.resolve(runIssuer);
 
   return { produce, consume, modules: { utils: { ...utils } }, ...spaces };
 };
