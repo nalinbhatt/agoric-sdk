@@ -78,7 +78,7 @@
  */
 
 /**
- * @typedef {Object} Producer<T>
+ * @typedef {object} Producer<T>
  * @property {(v: ERef<T>) => void} resolve
  * @property {(r: unknown) => void} reject
  * @property {() => void} reset
@@ -132,9 +132,11 @@
  */
 
 /**
+ * @typedef {import('../tokens.js').TokenKeyword} TokenKeyword
+ *
  * @typedef {{
  *   issuer: |
- *     'RUN' | 'BLD' | 'Attestation' | 'AUSD',
+ *     TokenKeyword | 'Attestation' | 'AUSD',
  *   installation: |
  *     'centralSupply' | 'mintHolder' |
  *     'contractGovernor' | 'committee' | 'noActionElectorate' | 'binaryVoteCounter' |
