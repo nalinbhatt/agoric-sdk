@@ -41,10 +41,12 @@ export async function buildDistributor(
   } = params;
 
   async function schedulePayments() {
-    contracts.map(contract =>
-      E(contract)
-        .collectFees()
-        .then(payment => E(feeDepositFacet).receive(payment)),
+    await Promise.all(
+      contracts.map(contract =>
+        E(contract)
+          .collectFees()
+          .then(payment => E(feeDepositFacet).receive(payment)),
+      ),
     );
   }
 
