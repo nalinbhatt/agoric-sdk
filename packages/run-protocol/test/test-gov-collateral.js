@@ -28,6 +28,7 @@ const dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
 /** @typedef {Awaited<ReturnType<makeTestContext>>} GovTestContext */
 /** @typedef {import('ava').ExecutionContext<GovTestContext>} GovTestCtx */
+
 /** @type {import('ava').TestInterface<GovTestContext>} */
 // @ts-expect-error cast
 const test = anyTest;

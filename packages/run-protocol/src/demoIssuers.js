@@ -78,7 +78,7 @@ export const showBrand = b =>
   `${b}`.replace(/.object Alleged: (.*) brand./, '$1');
 export const showAmount = ({ brand, value }) => {
   const b = `${showBrand(brand)}`;
-  assert(b in DecimalPlaces, b);
+  assert(b in DecimalPlaces, X`unknown brand name: ${q(b)}`);
   return `${decimal(value, DecimalPlaces[b])} ${b}`;
 };
 
