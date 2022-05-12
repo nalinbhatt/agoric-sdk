@@ -8,7 +8,7 @@ const { details: X } = assert;
 
 export const defaultFeeIssuerConfig = harden(
   /** @type {const} */ ({
-    name: 'ZOE',
+    name: 'ZDEFAULT',
     assetKind: AssetKind.NAT,
     displayInfo: harden({ decimalPlaces: 6, assetKind: AssetKind.NAT }),
   }),

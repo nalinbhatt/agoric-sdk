@@ -495,7 +495,7 @@ test(`zoe.getConfiguration`, async t => {
         assetKind: 'nat',
         decimalPlaces: 6,
       },
-      name: 'ZOE',
+      name: 'ZDEFAULT',
     },
   });
 });
