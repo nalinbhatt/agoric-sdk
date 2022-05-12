@@ -39,15 +39,14 @@ export async function buildDistributor(
     epochInterval = 1n,
   } = params;
 
-  async function schedulePayments() {
-    await Promise.all(
+  const schedulePayments = () =>
+    Promise.all(
       contracts.map(contract =>
         E(contract)
           .collectFees()
           .then(payment => E(feeDepositFacet).receive(payment)),
       ),
     );
-  }
 
   const timeObserver = {
     updateState: _ =>
