@@ -112,7 +112,7 @@ scenario2-setup-nobuild:
 	# Create the bootstrap account.
 	$(AGCH) --home=t1/bootstrap keys add bootstrap --keyring-backend=test
 	$(AGCH) --home=t1/bootstrap keys show -a bootstrap --keyring-backend=test > t1/bootstrap-address
-	$(AGCH) --home=t1/n0 add-genesis-account `cat t1/bootstrap-address` 1000000000000000ubld,50000000000urun,100provisionpass,100sendpacketpass
+	$(AGCH) --home=t1/n0 add-genesis-account `cat t1/bootstrap-address` 1000000000000000ubld,50000000000uist,100provisionpass,100sendpacketpass
 	# Create the (singleton) chain node.
 	$(AGCH) --home=t1/n0 --keyring-dir=t1/bootstrap gentx --keyring-backend=test bootstrap 73000000ubld --chain-id=$(CHAIN_ID)
 	$(AGCH) --home=t1/n0 collect-gentxs
@@ -158,7 +158,7 @@ scenario2-run-client: t1-provision-one-with-powers t1-start-ag-solo
 
 # Provision the ag-solo from an provisionpass-holding address (idempotent).
 AGORIC_POWERS = agoric.ALL_THE_POWERS
-SOLO_COINS = 13000000ubld,12345000000urun
+SOLO_COINS = 13000000ubld,12345000000uist
 COSMOS_RPC_HOST = localhost
 COSMOS_RPC_PORT = 26657
 wait-for-cosmos:
@@ -211,7 +211,7 @@ t1/$(BASE_PORT)/cosmos-fee-account.setup:
 	test ! -f t1/$(BASE_PORT)/cosmos-fee-account || \
 	  $(AGCH) --home=t1/$(BASE_PORT)/owner --keyring-backend=test tx feegrant grant \
 		--gas=auto --gas-adjustment=$(GAS_ADJUSTMENT) --broadcast-mode=block --yes --chain-id=$(CHAIN_ID) --from=owner \
-		--period=5 --period-limit=200urun $$(cat t1/$(BASE_PORT)/cosmos-fee-account) $$(cat t1/$(BASE_PORT)/ag-cosmos-helper-address)
+		--period=5 --period-limit=200uist $$(cat t1/$(BASE_PORT)/cosmos-fee-account) $$(cat t1/$(BASE_PORT)/ag-cosmos-helper-address)
 	date > $@
 
 # Actually start the ag-solo.
@@ -220,7 +220,7 @@ t1-start-ag-solo: t1/$(BASE_PORT)/cosmos-client-account.setup t1/$(BASE_PORT)/co
 	$(AGCH) query auth account $$addr >/dev/null 2>&1 || \
 		$(AGCH) --home=t1/bootstrap tx bank send --keyring-backend=test --from=bootstrap \
 		--gas=auto --gas-adjustment=$(GAS_ADJUSTMENT) --broadcast-mode=block --yes --chain-id=$(CHAIN_ID) \
-		bootstrap $$addr 1urun
+		bootstrap $$addr 1uist
 	cd t1/$(BASE_PORT) && \
 		SOLO_OTEL_EXPORTER_PROMETHEUS_PORT=$(SOLO_OTEL_EXPORTER_PROMETHEUS_PORT) \
 		$(AG_SOLO) start
