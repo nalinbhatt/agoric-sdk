@@ -25,7 +25,7 @@ export default function buildManualTimer(log, startValue = 0n, timeStep = 1n) {
   /** @type {MapStore<Timestamp, ERef<TimerWaker>[]>} */
   const schedule = makeScalarMapStore('Timestamp');
 
-  const makeRepeater = (delay, interval, timer) => {
+  const makeRepeater = (delay, interval) => {
     assert.typeof(delay, 'bigint');
     assert(
       delay % timeStep === 0n,
@@ -53,6 +53,7 @@ export default function buildManualTimer(log, startValue = 0n, timeStep = 1n) {
           return;
         }
         nextWakeup = ticks + interval;
+        // eslint-disable-next-line no-use-before-define
         timer.setWakeup(nextWakeup, repeaterWaker);
         await Promise.allSettled(wakers.map(waker => E(waker).wake(timestamp)));
       },
@@ -67,10 +68,12 @@ export default function buildManualTimer(log, startValue = 0n, timeStep = 1n) {
       },
       disable() {
         wakers = null;
+        // eslint-disable-next-line no-use-before-define
         timer.removeWakeup(repeaterWaker);
       },
     });
     nextWakeup = ticks + delay;
+    // eslint-disable-next-line no-use-before-define
     timer.setWakeup(nextWakeup, repeaterWaker);
     return repeater;
   };
@@ -133,7 +136,7 @@ export default function buildManualTimer(log, startValue = 0n, timeStep = 1n) {
       return harden(baseTimes);
     },
     makeRepeater(delay, interval) {
-      return makeRepeater(delay, interval, timer);
+      return makeRepeater(delay, interval);
     },
     makeNotifier(delay, interval) {
       assert.typeof(delay, 'bigint');
