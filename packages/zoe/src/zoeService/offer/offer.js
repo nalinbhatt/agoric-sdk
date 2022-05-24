@@ -45,7 +45,14 @@ export const makeOfferMethod = (
 
     const proposal = cleanProposal(uncleanProposal, getAssetKindByBrand);
     const proposalSchema = getProposalSchemaForInvitation(invitationHandle);
-    if (proposalSchema !== undefined) {
+    if (proposalSchema === undefined) {
+      // For the contract to opt into accepting a multiples value other than
+      // `1n`, it must provide `makeInvitation` with a proposalSchema.
+      assert(
+        proposal.multiples === 1n,
+        X`Contract not willing to accept multiples for this invitation: ${proposal}`,
+      );
+    } else {
       fit(proposal, proposalSchema);
     }
 

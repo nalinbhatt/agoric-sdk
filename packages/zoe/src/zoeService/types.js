@@ -193,6 +193,7 @@
  *
  * @typedef {{give: AmountKeywordRecord,
  *            want: AmountKeywordRecord,
+ *            multiples: bigint,
  *            exit: ExitRule
  *           }} ProposalRecord
  */

@@ -8,7 +8,7 @@ import { assert, details as X, q } from '@agoric/assert';
 import './types.js';
 import './internal-types.js';
 
-import { cleanKeywords } from '../cleanProposal.js';
+import { cleanKeywords, scaleAmount } from '../cleanProposal.js';
 import { arrayToObj, objectMap } from '../objArrayConversion.js';
 
 /**
@@ -79,7 +79,7 @@ export const makeEscrowStorage = () => {
 
   /** @type {DepositPayments} */
   const depositPayments = async (proposal, payments) => {
-    const { give, want } = proposal;
+    const { give, want, multiples } = proposal;
     const giveKeywords = Object.keys(give);
     const wantKeywords = Object.keys(want);
     const paymentKeywords = cleanKeywords(payments);
@@ -117,7 +117,8 @@ export const makeEscrowStorage = () => {
             paymentKeywords,
           )}`,
         );
-        return doDepositPayment(payments[keyword], give[keyword]);
+        const giveAmount = scaleAmount(give[keyword], multiples);
+        return doDepositPayment(payments[keyword], giveAmount);
       }),
     );
 

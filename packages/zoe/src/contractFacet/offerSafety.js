@@ -1,31 +1,51 @@
 // @ts-check
 
 import { AmountMath } from '@agoric/ertp';
+import { natSafeMath } from '../contractSupport/safeMath.js';
+
+const { entries } = Object;
 
 /**
- * Helper to perform satisfiesWant and satisfiesGive. Is
- * allocationAmount greater than or equal to requiredAmount for every
- * keyword of giveOrWant?
+ * Helper to perform satisfiesWant and satisfiesGive. How many times
+ * does the `allocation` satisfy the `giveOrWant`?
  *
  * @param {AmountKeywordRecord} giveOrWant
  * @param {AmountKeywordRecord} allocation
+ * @param {bigint} infinity
+ * @returns {bigint}
  */
-const satisfiesInternal = (giveOrWant = {}, allocation) => {
-  const isGTEByKeyword = ([keyword, requiredAmount]) => {
-    // If there is no allocation for a keyword, we know the giveOrWant
-    // is not satisfied without checking further.
+const satisfiesInternal = (giveOrWant = {}, allocation, infinity) => {
+  /** @type {bigint | undefined} */
+  let multiples = infinity;
+  for (const [keyword, requiredAmount] of entries(giveOrWant)) {
     if (allocation[keyword] === undefined) {
-      return false;
+      return 0n;
     }
     const allocationAmount = allocation[keyword];
-    return AmountMath.isGTE(allocationAmount, requiredAmount);
-  };
-  return Object.entries(giveOrWant).every(isGTEByKeyword);
+    if (!AmountMath.isGTE(allocationAmount, requiredAmount)) {
+      return 0n;
+    }
+    if (typeof requiredAmount.value !== 'bigint') {
+      multiples = 1n;
+    } else if (requiredAmount.value > 0n) {
+      assert.typeof(allocationAmount.value, 'bigint');
+      const howMany = natSafeMath.floorDivide(
+        allocationAmount.value,
+        requiredAmount.value,
+      );
+      if (multiples > howMany) {
+        multiples = howMany;
+      }
+    }
+  }
+  return multiples;
 };
 
 /**
  * For this allocation to satisfy what the user wanted, their
  * allocated amounts must be greater than or equal to proposal.want.
+ * Even if multiples > 1n, this succeeds if it satisfies just one
+ * unit of want.
  *
  * @param {ProposalRecord} proposal - the rules that accompanied the
  * escrow of payments that dictate what the user expected to get back
@@ -37,8 +57,9 @@ const satisfiesInternal = (giveOrWant = {}, allocation) => {
  * as keys and amounts as values. These amounts are the reallocation
  * to be given to a user.
  */
-const satisfiesWant = (proposal, allocation) =>
-  satisfiesInternal(proposal.want, allocation);
+export const satisfiesWant = (proposal, allocation) =>
+  satisfiesInternal(proposal.want, allocation, 1n) >= 1n;
+harden(satisfiesWant);
 
 /**
  * For this allocation to count as a full refund, the allocated
@@ -55,8 +76,9 @@ const satisfiesWant = (proposal, allocation) =>
  * as keys and amounts as values. These amounts are the reallocation
  * to be given to a user.
  */
-const satisfiesGive = (proposal, allocation) =>
-  satisfiesInternal(proposal.give, allocation);
+// Commented out because not currently used
+// const satisfiesGive = (proposal, allocation) =>
+//   satisfiesInternal(proposal.give, allocation) >= 1n;
 
 /**
  * `isOfferSafe` checks offer safety for a single offer.
@@ -75,10 +97,11 @@ const satisfiesGive = (proposal, allocation) =>
  * as keys and amounts as values. These amounts are the reallocation
  * to be given to a user.
  */
-function isOfferSafe(proposal, allocation) {
-  return (
-    satisfiesGive(proposal, allocation) || satisfiesWant(proposal, allocation)
-  );
-}
-
-export { isOfferSafe, satisfiesWant };
+export const isOfferSafe = (proposal, allocation) => {
+  const { give, want, multiples } = proposal;
+  const howMany =
+    satisfiesInternal(give, allocation, multiples) +
+    satisfiesInternal(want, allocation, multiples);
+  return howMany >= multiples;
+};
+harden(isOfferSafe);

@@ -53,6 +53,7 @@ test('makeEscrowStorage', async t => {
       GameTicket: gameTicketAmount,
       Money: currencyAmount,
     },
+    multiples: 1n,
     exit: {
       onDemand: null,
     },
@@ -155,6 +156,7 @@ test('payments without matching give keywords', async t => {
       GameTicket: gameTicketAmount,
       Money: currencyAmount,
     },
+    multiples: 1n,
     exit: {
       onDemand: null,
     },
@@ -188,6 +190,7 @@ test(`give keywords without matching payments`, async t => {
       GameTicket: gameTicketAmount,
       Money: currencyAmount,
     },
+    multiples: 1n,
     exit: {
       onDemand: null,
     },

@@ -29,12 +29,15 @@ test('isOfferSafe - more than want, more than give', t => {
   const proposal = harden({
     give: { A: moola(8n) },
     want: { B: simoleans(6n), C: bucks(7n) },
-    multiples: 1n,
+    multiples: 5n,
     exit: { waived: null },
   });
-  const amounts = harden({ A: moola(10n), B: simoleans(7n), C: bucks(8n) });
-
-  t.truthy(isOfferSafe(proposal, amounts));
+  t.truthy(
+    isOfferSafe(
+      proposal,
+      harden({ A: moola(50n), B: simoleans(35n), C: bucks(40n) }),
+    ),
+  );
 });
 
 // more than want, less than give -> true
@@ -43,12 +46,15 @@ test('isOfferSafe - more than want, less than give', t => {
   const proposal = harden({
     give: { A: moola(8n) },
     want: { B: simoleans(6n), C: bucks(7n) },
-    multiples: 1n,
+    multiples: 5n,
     exit: { waived: null },
   });
-  const amounts = harden({ A: moola(1n), B: simoleans(7n), C: bucks(8n) });
-
-  t.truthy(isOfferSafe(proposal, amounts));
+  t.truthy(
+    isOfferSafe(
+      proposal,
+      harden({ A: moola(1n), B: simoleans(35n), C: bucks(40n) }),
+    ),
+  );
 });
 
 // more than want, equal to give -> true
@@ -57,12 +63,15 @@ test('isOfferSafe - more than want, equal to give', t => {
   const proposal = harden({
     want: { A: moola(8n) },
     give: { B: simoleans(6n), C: bucks(7n) },
-    multiples: 1n,
+    multiples: 5n,
     exit: { waived: null },
   });
-  const amounts = harden({ A: moola(9n), B: simoleans(6n), C: bucks(7n) });
-
-  t.truthy(isOfferSafe(proposal, amounts));
+  t.truthy(
+    isOfferSafe(
+      proposal,
+      harden({ A: moola(45n), B: simoleans(30n), C: bucks(35n) }),
+    ),
+  );
 });
 
 // less than want, more than give -> true
@@ -71,12 +80,15 @@ test('isOfferSafe - less than want, more than give', t => {
   const proposal = harden({
     want: { A: moola(8n) },
     give: { B: simoleans(6n), C: bucks(7n) },
-    multiples: 1n,
+    multiples: 5n,
     exit: { waived: null },
   });
-  const amounts = harden({ A: moola(7n), B: simoleans(9n), C: bucks(19n) });
-
-  t.truthy(isOfferSafe(proposal, amounts));
+  t.truthy(
+    isOfferSafe(
+      proposal,
+      harden({ A: moola(7n), B: simoleans(45n), C: bucks(95n) }),
+    ),
+  );
 });
 
 // less than want, less than give -> false
@@ -85,12 +97,15 @@ test('isOfferSafe - less than want, less than give', t => {
   const proposal = harden({
     want: { A: moola(8n) },
     give: { B: simoleans(6n), C: bucks(7n) },
-    multiples: 1n,
+    multiples: 5n,
     exit: { waived: null },
   });
-  const amounts = harden({ A: moola(7n), B: simoleans(5n), C: bucks(6n) });
-
-  t.falsy(isOfferSafe(proposal, amounts));
+  t.falsy(
+    isOfferSafe(
+      proposal,
+      harden({ A: moola(7n), B: simoleans(5n), C: bucks(6n) }),
+    ),
+  );
 });
 
 // less than want, equal to give -> true
@@ -99,12 +114,15 @@ test('isOfferSafe - less than want, equal to give', t => {
   const proposal = harden({
     want: { B: simoleans(6n) },
     give: { A: moola(1n), C: bucks(7n) },
-    multiples: 1n,
+    multiples: 5n,
     exit: { waived: null },
   });
-  const amounts = harden({ A: moola(1n), B: simoleans(5n), C: bucks(7n) });
-
-  t.truthy(isOfferSafe(proposal, amounts));
+  t.truthy(
+    isOfferSafe(
+      proposal,
+      harden({ A: moola(5n), B: simoleans(5n), C: bucks(35n) }),
+    ),
+  );
 });
 
 // equal to want, more than give -> true
@@ -113,12 +131,15 @@ test('isOfferSafe - equal to want, more than give', t => {
   const proposal = harden({
     want: { B: simoleans(6n) },
     give: { A: moola(1n), C: bucks(7n) },
-    multiples: 1n,
+    multiples: 5n,
     exit: { waived: null },
   });
-  const amounts = harden({ A: moola(2n), B: simoleans(6n), C: bucks(8n) });
-
-  t.truthy(isOfferSafe(proposal, amounts));
+  t.truthy(
+    isOfferSafe(
+      proposal,
+      harden({ A: moola(10n), B: simoleans(30n), C: bucks(40n) }),
+    ),
+  );
 });
 
 // equal to want, less than give -> true
@@ -127,12 +148,15 @@ test('isOfferSafe - equal to want, less than give', t => {
   const proposal = harden({
     want: { B: simoleans(6n) },
     give: { A: moola(1n), C: bucks(7n) },
-    multiples: 1n,
+    multiples: 5n,
     exit: { waived: null },
   });
-  const amounts = harden({ A: moola(0n), B: simoleans(6n), C: bucks(0n) });
-
-  t.truthy(isOfferSafe(proposal, amounts));
+  t.truthy(
+    isOfferSafe(
+      proposal,
+      harden({ A: moola(0n), B: simoleans(30n), C: bucks(0n) }),
+    ),
+  );
 });
 
 // equal to want, equal to give -> true
@@ -141,12 +165,15 @@ test('isOfferSafe - equal to want, equal to give', t => {
   const proposal = harden({
     want: { B: simoleans(6n) },
     give: { A: moola(1n), C: bucks(7n) },
-    multiples: 1n,
+    multiples: 5n,
     exit: { waived: null },
   });
-  const amounts = harden({ A: moola(1n), B: simoleans(6n), C: bucks(7n) });
-
-  t.truthy(isOfferSafe(proposal, amounts));
+  t.truthy(
+    isOfferSafe(
+      proposal,
+      harden({ A: moola(5n), B: simoleans(30n), C: bucks(35n) }),
+    ),
+  );
 });
 
 test('isOfferSafe - empty proposal', t => {
@@ -154,10 +181,13 @@ test('isOfferSafe - empty proposal', t => {
   const proposal = harden({
     give: {},
     want: {},
-    multiples: 1n,
+    multiples: 5n,
     exit: { waived: null },
   });
-  const amounts = harden({ A: moola(1n), B: simoleans(6n), C: bucks(7n) });
-
-  t.truthy(isOfferSafe(proposal, amounts));
+  t.truthy(
+    isOfferSafe(
+      proposal,
+      harden({ A: moola(1n), B: simoleans(6n), C: bucks(7n) }),
+    ),
+  );
 });

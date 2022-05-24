@@ -15,6 +15,7 @@ export const AmountPatternKeywordRecordShape = M.recordOf(
 export const ProposalShape = harden({
   want: AmountPatternKeywordRecordShape,
   give: AmountKeywordRecordShape,
+  multiples: M.gte(1n),
   // To accept only one, we could use M.or rather than M.partial,
   // but the error messages would have been worse. Rather,
   // cleanProposal's assertExit checks that there's exactly one.
