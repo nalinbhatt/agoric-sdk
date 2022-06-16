@@ -19,7 +19,6 @@ import { Nat } from '@agoric/nat';
 import {
   assertProposalShape,
   ceilDivideBy,
-  ceilMultiplyBy,
   floorDivideBy,
   getAmountIn,
   getAmountOut,
@@ -36,7 +35,7 @@ import { AmountMath } from '@agoric/ertp';
 import { defineKindMulti, pickFacet } from '@agoric/vat-data';
 import { makeVault, Phase } from './vault.js';
 import { makePrioritizedVaults } from './prioritizedVaults.js';
-import { liquidate } from './liquidation.js';
+import { liquidate, makeQuote, updateQuote } from './liquidation.js';
 import { makeTracer } from '../makeTracer.js';
 import { chargeInterest } from '../interest.js';
 import { checkDebtLimit } from '../contractSupport.js';
@@ -130,6 +129,7 @@ const trace = makeTracer('VM');
 
 // EPHEMERAL STATE
 let liquidationInProgress = false;
+/** @type {Promise<MutableQuote>?} */
 let outstandingQuote = null;
 
 /**
@@ -216,20 +216,6 @@ const initState = (
 
   return state;
 };
-
-/**
- * Threshold to alert when the price level falls enough that the vault
- * with the highest debt to collateral ratio will no longer be valued at the
- * liquidationMargin above its debt.
- *
- * @param {Ratio} highestDebtRatio
- * @param {Ratio} liquidationMargin
- */
-const liquidationThreshold = (highestDebtRatio, liquidationMargin) =>
-  ceilMultiplyBy(
-    highestDebtRatio.numerator, // debt
-    liquidationMargin,
-  );
 
 // Some of these could go in closures but are kept on a facet anticipating future durability options.
 const helperBehavior = {
@@ -361,11 +347,8 @@ const helperBehavior = {
     const govParams = state.factoryPowers.getGovernedParams();
     const liquidationMargin = govParams.getLiquidationMargin();
     // Safe to call extraneously (lightweight and idempotent)
-    E(outstandingQuote).updateLevel(
-      highestDebtRatio.denominator, // collateral
-      liquidationThreshold(highestDebtRatio, liquidationMargin),
-    );
-    trace('update quote', highestDebtRatio);
+    updateQuote(outstandingQuote, highestDebtRatio, liquidationMargin);
+    trace('update quote for', highestDebtRatio);
   },
 
   /**
@@ -386,11 +369,12 @@ const helperBehavior = {
         // ask to be alerted when the price level falls enough that the vault
         // with the highest debt to collateral ratio will no longer be valued at the
         // liquidationMargin above its debt.
-        outstandingQuote = E(priceAuthority).mutableQuoteWhenLT(
-          highestDebtRatio.denominator, // collateral
-          liquidationThreshold(highestDebtRatio, liquidationMargin),
+        outstandingQuote = makeQuote(
+          priceAuthority,
+          highestDebtRatio,
+          liquidationMargin,
         );
-        trace('posted quote request', highestDebtRatio);
+        trace('posted quote request for', highestDebtRatio);
 
         // The rest of this method will not happen until after a quote is received.
         // This may not happen until much later, when the market changes.
