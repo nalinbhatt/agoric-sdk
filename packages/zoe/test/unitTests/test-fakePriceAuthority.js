@@ -12,7 +12,7 @@ import {
   getAmountOut,
   getTimestamp,
   getAmountIn,
-  getQuoteValues,
+  getPriceDescription,
 } from '../../src/contractSupport/index.js';
 import { assertAmountsEqual } from '../zoeTestHelpers.js';
 
@@ -63,7 +63,7 @@ test('priceAuthority quoteGiven', async t => {
 
   await E(manualTimer).tick();
   const quote = await E(priceAuthority).quoteGiven(moola(37n), bucksBrand);
-  const quoteAmount = getQuoteValues(quote);
+  const quoteAmount = getPriceDescription(quote);
   t.is(1n, quoteAmount.timestamp);
   t.deepEqual(bucks(37n * 20n), quoteAmount.amountOut);
 });
