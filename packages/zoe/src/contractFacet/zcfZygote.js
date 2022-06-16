@@ -222,7 +222,7 @@ export const makeZCFZygote = (
    * @param {Keyword} keyword
    * @param {K} [assetKind]
    * @param {AdditionalDisplayInfo=} displayInfo
-   * @returns {Promise<ZCFMint>}
+   * @returns {Promise<ZCFMint<K>>}
    */
   const makeZCFMint = async (
     keyword,
