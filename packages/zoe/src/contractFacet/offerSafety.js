@@ -16,7 +16,6 @@ const { entries } = Object;
  * @returns {bigint}
  */
 const satisfiesInternal = (giveOrWant = {}, allocation, infinity) => {
-  /** @type {bigint | undefined} */
   let multiples = infinity;
   for (const [keyword, requiredAmount] of entries(giveOrWant)) {
     if (allocation[keyword] === undefined) {
