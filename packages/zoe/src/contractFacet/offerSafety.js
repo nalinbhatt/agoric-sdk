@@ -11,7 +11,8 @@ const { entries } = Object;
  *
  * @param {AmountKeywordRecord} giveOrWant
  * @param {AmountKeywordRecord} allocation
- * @param {bigint} infinity
+ * @param {bigint} infinity Simply any number big enough that we don't care if
+ * the correct answer is even larger, but is misreported as this number instead.
  * @returns {bigint}
  */
 const satisfiesInternal = (giveOrWant = {}, allocation, infinity) => {
