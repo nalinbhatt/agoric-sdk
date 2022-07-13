@@ -9,6 +9,7 @@ export function buildRootObject() {
       events.push(time);
     },
   });
+  let repeater;
 
   return Far('root', {
     async bootstrap(vats, devices) {
@@ -37,5 +38,47 @@ export function buildRootObject() {
       }
       throw Error('banana too slippery');
     },
+
+    async goodRepeater(startTime, interval) {
+      repeater = await E(ts).makeRepeater(startTime, interval);
+      await E(repeater).schedule(handler);
+    },
+
+    async stopRepeater() {
+      await E(repeater).disable();
+    },
+
+    async repeaterBadSchedule(startTime, interval) {
+      repeater = await E(ts).makeRepeater(startTime, interval);
+      try {
+        await E(repeater).schedule('norb'); // missing arguments #4282
+        return 'should have failed';
+      } catch (e) {
+        return e.message;
+      }
+      throw Error('should have failed');
+    },
+
+    async badRemoveWakeup1() {
+      // non-Far is rejected
+      try {
+        await E(ts).removeWakeup(); // bad argument #4296
+        return 'survived';
+      } catch (e) {
+        return e.message;
+      }
+    },
+
+    async badRemoveWakeup2() {
+      // non-handlers are rejected
+      try {
+        const farButNotHandler = Far('nope', {});
+        await E(ts).removeWakeup(farButNotHandler); // bad argument #4296
+        return 'survived';
+      } catch(e) {
+        return e.message;
+      }
+    },
+
   });
 }

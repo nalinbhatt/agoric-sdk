@@ -72,4 +72,57 @@ test('timer vat', async t => {
 
   const cd9 = await run('banana', [10n]);
   t.deepEqual(parse(cd9.body), 'bad setWakeup() handler');
+
+  await run('goodRepeater', [20n, 10n]);
+  timer.poll(25n);
+  const cd10 = await run('getEvents');
+  t.deepEqual(parse(cd10.body), [20n]);
+  timer.poll(35n);
+  const cd11 = await run('getEvents');
+  t.deepEqual(parse(cd11.body), [30n]);
+  await run('stopRepeater');
+  timer.poll(45n);
+  const cd12 = await run('getEvents');
+  // TODO: disabling the repeater between t=35 and t=40 should inhibit
+  // the t=40 event, but the code does not walk the list of pending
+  // wakeups and remove repeater events, it just turns off the
+  // automatic rescheduling step
+  t.deepEqual(parse(cd12.body), [40n]); // TODO: should be []
+
+  timer.poll(55n);
+  const cd13 = await run('getEvents');
+  t.deepEqual(parse(cd13.body), []); // repeater disabled, no events
+
+  const cd14 = await run('repeaterBadSchedule', [60n, 10n]);
+  // TODO: repeaterBadSchedule does a repeater.schedule() with a
+  // non-Far handler, which should throw an immediate error, but
+  // instead is stored normally, which causes a panic during the next
+  // poll() which triggers the repeater notification
+
+  //t.deepEqual(parse(cd14.body), 'bad handler');
+  //timer.poll(75n);
+  t.pass('survived timer.poll');
+
+  // trying to remove a non-Far handler should throw. TODO: they are
+  // currently ignored
+  const cd15 = await run('badRemoveWakeup1', []);
+  t.deepEqual(parse(cd15.body), 'bad removeWakeup() handler');
+
+  // trying to remove a Far handler that wasn't previously registered
+  // should throw. TODO: they are currently ignored
+  const cd16 = await run('badRemoveWakeup2', []);
+  t.deepEqual(parse(cd16.body), 'survived');
+
+
+
 });
+
+
+// TODO 1: deleting a repeater should cancel all wakeups for it, but the next wakeup happens anyways
+
+// TODO 2: deleting a repeater should free all memory used by it, but
+// there's an array which holds empty entries and never shrinks
+
+// TODO 3: attempting to repeater.schedule an invalid handler should
+// throw, but succeeds and provokes a kernel panic later when poll()
+// is called (and tries to invoke the handler)
