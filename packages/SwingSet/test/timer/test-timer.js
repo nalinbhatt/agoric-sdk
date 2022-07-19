@@ -73,6 +73,8 @@ test('timer vat', async t => {
   const cd9 = await run('banana', [10n]);
   t.deepEqual(parse(cd9.body), 'bad setWakeup() handler');
 
+  // start a repeater that should first fire at now+delay+interval, so
+  // 7+20+10=37. TODO: poll at 25,35,40
   await run('goodRepeater', [20n, 10n]);
   timer.poll(25n);
   const cd10 = await run('getEvents');
@@ -126,3 +128,8 @@ test('timer vat', async t => {
 // TODO 3: attempting to repeater.schedule an invalid handler should
 // throw, but succeeds and provokes a kernel panic later when poll()
 // is called (and tries to invoke the handler)
+
+// TODO 4: vat-timer.js and timer.md claim `makeRepeater(delay,
+// interval)` where the first arg is delay-from-now, but
+// device-timer.js provides `makeRepeater(startTime, interval)`, where
+// the arg is delay-from-epoch
