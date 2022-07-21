@@ -21,7 +21,7 @@ import { extractCoreProposalBundles } from '@agoric/deploy-script-support/src/ex
 import { makeCoreProposalBehavior } from '@agoric/deploy-script-support/src/coreProposalBehavior.js';
 import { makeNameHubKit } from '@agoric/vats/src/nameHub.js';
 import { AmountMath, makeIssuerKit } from '@agoric/ertp';
-import { makeNodeBundleCache } from './bundleTool.js';
+import { makeNodeBundleCache } from '@agoric/swingset-vat/tools/bundleTool.js';
 import { setupBootstrap, setUpZoeForTest, mintRunPayment } from './supports.js';
 
 /** @template T @typedef {import('@endo/promise-kit').PromiseKit<T>} PromiseKit */
