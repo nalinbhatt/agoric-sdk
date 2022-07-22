@@ -223,6 +223,10 @@ export const makeAddressNameHubs = async ({
 };
 harden(makeAddressNameHubs);
 
+const AccountFlags = /** @type {const} */ ({
+  REMOTE_WALLET: 'REMOTE_WALLET',
+});
+
 /** @param {BootstrapSpace} powers */
 export const makeClientBanks = async ({
   consume: {
@@ -249,7 +253,10 @@ export const makeClientBanks = async ({
     { storageNode },
   );
   return E(client).assignBundle([
-    address => {
+    (address, accountFlags) => {
+      if (AccountFlags.REMOTE_WALLET in accountFlags) {
+        return {};
+      }
       const bank = E(bankManager).getBankForAddress(address);
       /** @type {ERef<MyAddressNameAdmin>} */
       const myAddressNameAdmin = E(namesByAddressAdmin).lookupAdmin(address);
