@@ -224,6 +224,7 @@ export const makeAddressNameHubs = async ({
 harden(makeAddressNameHubs);
 
 const AccountFlags = /** @type {const} */ ({
+  SMART_WALLET: 'SMART_WALLET', // TODO: make this the default
   REMOTE_WALLET: 'REMOTE_WALLET',
 });
 
@@ -254,7 +255,7 @@ export const makeClientBanks = async ({
   );
   return E(client).assignBundle([
     (address, accountFlags) => {
-      if (AccountFlags.REMOTE_WALLET in accountFlags) {
+      if (!accountFlags.includes(AccountFlags.SMART_WALLET)) {
         return {};
       }
       const bank = E(bankManager).getBankForAddress(address);
