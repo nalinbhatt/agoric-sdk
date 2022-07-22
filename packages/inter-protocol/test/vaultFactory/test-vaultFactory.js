@@ -338,7 +338,7 @@ const setupServices = async (
   await startVaultFactory(space, { loanParams: loanTiming }, minInitialDebt);
 
   const governorCreatorFacet = consume.vaultFactoryGovernorCreator;
-  /** @type {Promise<VaultFactory & LimitedCreatorFacet<VaultFactory>>} */
+  /** @type {Promise<VaultFactoryCreatorFacet & LimitedCreatorFacet<VaultFactoryCreatorFacet>>} */
   const vaultFactoryCreatorFacetP = E(governorCreatorFacet).getCreatorFacet();
   const reserveCreatorFacet = consume.reserveCreatorFacet;
   const reserveFacets = { reserveCreatorFacet };
@@ -350,7 +350,7 @@ const setupServices = async (
     'AEth',
     rates,
   );
-  /** @type {[any, VaultFactory, VFC['publicFacet'], VaultManager, PriceAuthority]} */
+  /** @type {[any, VaultFactoryCreatorFacet, VFC['publicFacet'], VaultManager, PriceAuthority]} */
   // @ts-expect-error cast
   const [
     governorInstance,

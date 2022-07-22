@@ -49,7 +49,7 @@ const CENTRAL_DENOM_NAME = 'urun';
  *   reserveCreatorFacet: import('../reserve/assetReserve.js').AssetReserveCreatorFacet,
  *   reserveGovernorCreatorFacet: GovernedContractFacetAccess<unknown>,
  *   runStakeCreatorFacet: import('../runStake/runStake.js').RunStakeCreator,
- *   vaultFactoryCreator: VaultFactory,
+ *   vaultFactoryCreator: VaultFactoryCreatorFacet,
  *   vaultFactoryGovernorCreator: GovernedContractFacetAccess<unknown>,
  *   vaultFactoryVoteCreator: unknown,
  *   minInitialDebt: NatValue,
