@@ -224,7 +224,7 @@ export function buildRootObject(vatPowers, _vatParameters, baggage) {
     assert(wakeupHandler, 'reschedule() without wakeupHandler');
     // the first wakeup should be in the future: the device will not
     // immediately fire when given a stale request
-    const newFirstWakeup = firstWakeup();
+    const newFirstWakeup = firstWakeup(schedule);
     // idempotent and ignored if not currently registered
     D(timerDevice).removeWakeup(wakeupHandler);
     if (newFirstWakeup) {
@@ -258,7 +258,7 @@ export function buildRootObject(vatPowers, _vatParameters, baggage) {
     scheduleYourself({ self, state }) {
       const { when, cancelToken } = state;
       state.scheduled = when; // cleared if fired/cancelled
-      addEvent(when, self);
+      addEvent(schedule, when, self);
       if (cancelToken) {
         addCancel(cancels, cancelToken, self);
       }
@@ -285,7 +285,7 @@ export function buildRootObject(vatPowers, _vatParameters, baggage) {
 
     cancel({ self, state }) {
       removeCancel(cancels, state.cancelToken, self);
-      self.cancelled = true;
+      state.cancelled = true;
       if (state.scheduled) {
         removeEvent(schedule, state.scheduled, self);
         state.scheduled = undefined;
@@ -315,7 +315,7 @@ export function buildRootObject(vatPowers, _vatParameters, baggage) {
     scheduleYourself({ self, state }) {
       const { when, cancelToken } = state;
       state.scheduled = when; // cleared if fired/cancelled
-      addEvent(when, self);
+      addEvent(schedule, when, self);
       if (cancelToken) {
         addCancel(cancels, cancelToken, self);
       }
@@ -342,7 +342,7 @@ export function buildRootObject(vatPowers, _vatParameters, baggage) {
     cancel({ self, state }) {
       const { wakeupPromiseID, scheduled, cancelToken } = state;
       removeCancel(cancels, cancelToken, self);
-      self.cancelled = true;
+      state.cancelled = true;
       if (scheduled) {
         removeEvent(schedule, scheduled, self);
         state.scheduled = undefined;
@@ -377,8 +377,8 @@ export function buildRootObject(vatPowers, _vatParameters, baggage) {
       // first time
       const { startTime, interval, cancelToken } = state;
       const now = getCurrentTimestamp();
-      const next = nextScheduleTime(startTime, interval, now);
-      addEvent(next, self);
+      const when = nextScheduleTime(startTime, interval, now);
+      addEvent(schedule, when, self);
       if (cancelToken) {
         addCancel(cancels, cancelToken, self);
       }
@@ -392,8 +392,8 @@ export function buildRootObject(vatPowers, _vatParameters, baggage) {
         return;
       }
       const now = getCurrentTimestamp();
-      const next = nextScheduleTime(startTime, interval, now);
-      addEvent(next, self);
+      const when = nextScheduleTime(startTime, interval, now);
+      addEvent(schedule, when, self);
       reschedule();
     },
 
@@ -417,7 +417,7 @@ export function buildRootObject(vatPowers, _vatParameters, baggage) {
     cancel({ self, state }) {
       const { scheduled, cancelToken } = state;
       removeCancel(cancels, cancelToken, self);
-      self.cancelled = true;
+      state.cancelled = true;
       if (scheduled) {
         removeEvent(schedule, scheduled, self);
         state.scheduled = undefined;
@@ -473,7 +473,7 @@ export function buildRootObject(vatPowers, _vatParameters, baggage) {
   function processAndReschedule() {
     // first, service everything that is ready
     const now = getCurrentTimestamp();
-    removeEventsUpTo(now).forEach(event => event.fired());
+    removeEventsUpTo(schedule, now).forEach(event => event.fired());
     // then, reschedule for whatever is up next
     reschedule();
   }
@@ -524,8 +524,7 @@ export function buildRootObject(vatPowers, _vatParameters, baggage) {
   function cancel(cancelToken) {
     // silently ignore multiple cancels and bogus token
     if (cancels.has(cancelToken)) {
-      const event = cancels.get(cancelToken);
-      event.cancel();
+      cancels.get(cancelToken).forEach(event => event.cancel());
     }
   }
 
@@ -599,7 +598,7 @@ export function buildRootObject(vatPowers, _vatParameters, baggage) {
       },
     },
   };
-  const makeRepeater = defineDurableKind(
+  const makeRepeater = defineDurableKindMulti(
     repeaterHandle,
     initRepeater,
     repeaterFacets,
