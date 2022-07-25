@@ -211,7 +211,7 @@
  */
 
 /**
- * @typedef {bigint} Deadline
+ * @typedef {Timestamp} Deadline
  */
 
 /**

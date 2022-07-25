@@ -3,6 +3,7 @@
 import { AmountMath } from '@agoric/ertp';
 import { makePublishKit, observeNotifier } from '@agoric/notifier';
 import { fit, getCopyBagEntries, M } from '@agoric/store';
+import { TimeMath } from '@agoric/swingset-vat';
 import { defineKindMulti } from '@agoric/vat-data';
 import { floorMultiplyBy } from '@agoric/zoe/src/contractSupport/index.js';
 import { makeRatio } from '@agoric/zoe/src/contractSupport/ratio.js';
@@ -25,7 +26,7 @@ const trace = makeTracer('RSM', false);
  * }} ParamManager
  * @typedef {{
  *   compoundedInterest: Ratio,
- *   latestInterestUpdate: NatValue,
+ *   latestInterestUpdate: Timestamp,
  *   totalDebt: Amount<'nat'>,
  * }} AssetState
  * @typedef {Readonly<{
@@ -33,11 +34,11 @@ const trace = makeTracer('RSM', false);
  *   assetSubscriber: Subscriber<AssetState>,
  *   brands: { debt: Brand<'nat'>, Attestation: Brand<'copyBag'>, Stake: Brand<'nat'> },
  *   mintPowers: { burnDebt: BurnDebt, getGovernedParams: () => ParamManager, mintAndReallocate: MintAndReallocate },
- *   chargingPeriod: bigint,
+ *   chargingPeriod: RelativeTime,
  *   debtMint: ZCFMint<'nat'>,
  *   poolIncrementSeat: ZCFSeat,
- *   recordingPeriod: bigint,
- *   startTimeStamp: bigint,
+ *   recordingPeriod: RelativeTime,
+ *   startTimeStamp: Timestamp,
  *   timerService: ERef<TimerService>,
  *   zcf: ZCF,
  * }>} ImmutableState
@@ -57,9 +58,9 @@ const trace = makeTracer('RSM', false);
  * @param {{ burnDebt: BurnDebt, getGovernedParams: () => ParamManager, mintAndReallocate: MintAndReallocate }} mintPowers
  * @param {object} timing
  * @param {ERef<TimerService>} timing.timerService
- * @param {bigint} timing.chargingPeriod
- * @param {bigint} timing.recordingPeriod
- * @param {bigint} timing.startTimeStamp
+ * @param {RelativeTime} timing.chargingPeriod
+ * @param {RelativeTime} timing.recordingPeriod
+ * @param {Timestamp} timing.startTimeStamp
  *
  * @returns {State}
  */
@@ -118,7 +119,7 @@ const finish = ({ state, facets }) => {
   void observeNotifier(periodNotifier, {
     updateState: updateTime =>
       helper
-        .chargeAllVaults(updateTime)
+        .chargeAllVaults(TimeMath.absValue(updateTime))
         .catch(e =>
           console.error('🚨 runStakeManager failed to charge interest', e),
         ),

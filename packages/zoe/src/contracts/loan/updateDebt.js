@@ -5,6 +5,7 @@ import { Far } from '@endo/marshal';
 import { makeNotifierKit, observeNotifier } from '@agoric/notifier';
 import { assert, details as X } from '@agoric/assert';
 import { AmountMath } from '@agoric/ertp';
+import { TimeMath } from '@agoric/swingset-vat';
 
 import { scheduleLiquidation } from './scheduleLiquidation.js';
 import { ceilMultiplyBy } from '../../contractSupport/index.js';
@@ -51,8 +52,16 @@ export const makeDebtCalculator = debtCalculatorConfig => {
       let updatedLoan = false;
       // we could calculate the number of required updates and multiply by a power
       // of the interest rate, but this seems easier to read.
-      while (lastCalculationTimestamp + interestPeriod <= timestamp) {
-        lastCalculationTimestamp += interestPeriod;
+      while (
+        TimeMath.compareAbs(
+          TimeMath.addAbsRel(lastCalculationTimestamp, interestPeriod),
+          timestamp,
+        ) <= 0
+      ) {
+        lastCalculationTimestamp = TimeMath.addAbsRel(
+          lastCalculationTimestamp,
+          interestPeriod,
+        );
         const interest = calcInterestFn(debt, interestRate);
         debt = AmountMath.add(debt, interest);
         updatedLoan = true;
