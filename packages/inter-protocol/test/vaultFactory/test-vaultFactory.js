@@ -9,6 +9,7 @@ import { deeplyFulfilled } from '@endo/marshal';
 import { AmountMath, AssetKind, makeIssuerKit } from '@agoric/ertp';
 import {
   makeNotifierFromAsyncIterable,
+  makeNotifierFromSubscriber,
   makeStoredPublisherKit,
 } from '@agoric/notifier';
 import buildManualTimer from '@agoric/zoe/tools/manualTimer.js';
@@ -264,6 +265,29 @@ const getRunFromFaucet = async (t, amount) => {
 };
 
 /**
+ * Vault offer result used to include `publicNotifiers` but now is `publicSubscribers`.
+ *
+ * @param {UserSeat<VaultKit>} vaultSeat
+ */
+const legacyOfferResult = vaultSeat => {
+  return E(vaultSeat)
+    .getOfferResult()
+    .then(result => {
+      console.log('DEBUG', { result });
+      const { vault, publicSubscribers } = result;
+      assert(vault, 'missing vault');
+      assert(publicSubscribers, 'missing publicSubscribers');
+      return {
+        vault,
+        publicNotifiers: {
+          asset: makeNotifierFromSubscriber(publicSubscribers.asset),
+          vault: makeNotifierFromSubscriber(publicSubscribers.vault),
+        },
+      };
+    });
+};
+
+/**
  * NOTE: called separately by each test so AMM/zoe/priceAuthority don't interfere
  *
  * @param {import('ava').ExecutionContext<Context>} t
@@ -442,7 +466,7 @@ test('first', async t => {
   const {
     vault,
     publicNotifiers: { vault: vaultNotifier },
-  } = await E(vaultSeat).getOfferResult();
+  } = await legacyOfferResult(vaultSeat);
   const debtAmount = await E(vault).getCurrentDebt();
   const fee = ceilMultiplyBy(run.make(470n), rates.loanFee);
   t.deepEqual(
@@ -569,7 +593,7 @@ test('price drop', async t => {
   const {
     vault,
     publicNotifiers: { vault: vaultNotifier },
-  } = await E(vaultSeat).getOfferResult();
+  } = await legacyOfferResult(vaultSeat);
   trace(t, 'offer result', vault);
   const debtAmount = await E(vault).getCurrentDebt();
   const fee = ceilMultiplyBy(loanAmount, rates.loanFee);
@@ -716,7 +740,7 @@ test('price falls precipitously', async t => {
   const {
     vault,
     publicNotifiers: { vault: vaultNotifier },
-  } = await E(userSeat).getOfferResult();
+  } = await legacyOfferResult(userSeat);
   const debtAmount = await E(vault).getCurrentDebt();
   const fee = ceilMultiplyBy(run.make(370n), rates.loanFee);
   t.deepEqual(
@@ -892,7 +916,7 @@ test('interest on multiple vaults', async t => {
   const {
     vault: aliceVault,
     publicNotifiers: { vault: aliceNotifier, asset: assetNotifier },
-  } = await E(aliceLoanSeat).getOfferResult();
+  } = await legacyOfferResult(aliceLoanSeat);
 
   const debtAmount = await E(aliceVault).getCurrentDebt();
   const fee = ceilMultiplyBy(aliceLoanAmount, rates.loanFee);
@@ -931,7 +955,7 @@ test('interest on multiple vaults', async t => {
   const {
     vault: bobVault,
     publicNotifiers: { vault: bobNotifier },
-  } = await E(bobLoanSeat).getOfferResult();
+  } = await legacyOfferResult(bobLoanSeat);
 
   const bobDebtAmount = await E(bobVault).getCurrentDebt();
   const bobFee = ceilMultiplyBy(bobLoanAmount, rates.loanFee);
@@ -1033,7 +1057,7 @@ test('interest on multiple vaults', async t => {
   const {
     vault: danVault,
     publicNotifiers: { vault: danNotifier },
-  } = await E(danLoanSeat).getOfferResult();
+  } = await legacyOfferResult(danLoanSeat);
   const danActualDebt = wantedRun + 50n; // includes fees
   t.is((await E(danVault).getCurrentDebt()).value, danActualDebt);
   const normalizedDebt = (await E(danVault).getNormalizedDebt()).value;
@@ -1081,7 +1105,7 @@ test('adjust balances', async t => {
   const {
     vault: aliceVault,
     publicNotifiers: { vault: aliceNotifier },
-  } = await E(aliceLoanSeat).getOfferResult();
+  } = await legacyOfferResult(aliceLoanSeat);
 
   let debtAmount = await E(aliceVault).getCurrentDebt();
   const fee = ceilMultiplyBy(aliceLoanAmount, rates.loanFee);
@@ -1329,7 +1353,7 @@ test('adjust balances - withdraw RUN', async t => {
   const {
     vault: aliceVault,
     publicNotifiers: { vault: aliceNotifier },
-  } = await E(aliceLoanSeat).getOfferResult();
+  } = await legacyOfferResult(aliceLoanSeat);
 
   let debtAmount = await E(aliceVault).getCurrentDebt();
   const fee = ceilMultiplyBy(aliceLoanAmount, rates.loanFee);
@@ -1462,7 +1486,7 @@ test('transfer vault', async t => {
   const {
     vault: aliceVault,
     publicNotifiers: { vault: aliceNotifier },
-  } = await E(aliceLoanSeat).getOfferResult();
+  } = await legacyOfferResult(aliceLoanSeat);
 
   const debtAmount = await E(aliceVault).getCurrentDebt();
 
@@ -1480,7 +1504,7 @@ test('transfer vault', async t => {
   const {
     vault: transferVault,
     publicNotifiers: { vault: transferNotifier },
-  } = await E(transferSeat).getOfferResult();
+  } = await legacyOfferResult(transferSeat);
   await t.throwsAsync(() => E(aliceVault).getCurrentDebt());
   const debtAfter = await E(transferVault).getCurrentDebt();
   t.deepEqual(debtAfter, debtAmount, 'vault lent 5000 RUN + fees');
@@ -1539,7 +1563,7 @@ test('transfer vault', async t => {
   const {
     vault: t2Vault,
     publicNotifiers: { vault: t2Notifier },
-  } = await E(t2Seat).getOfferResult();
+  } = await legacyOfferResult(t2Seat);
   await t.throwsAsync(
     () => E(adjustSeatPromise).getOfferResult(),
     {
@@ -1603,7 +1627,7 @@ test('overdeposit', async t => {
   const {
     vault: aliceVault,
     publicNotifiers: { vault: aliceNotifier },
-  } = await E(aliceLoanSeat).getOfferResult();
+  } = await legacyOfferResult(aliceLoanSeat);
 
   let debtAmount = await E(aliceVault).getCurrentDebt();
   const fee = ceilMultiplyBy(aliceLoanAmount, rates.loanFee);
@@ -1759,7 +1783,7 @@ test('mutable liquidity triggers and interest', async t => {
   const {
     vault: aliceVault,
     publicNotifiers: { vault: aliceNotifier },
-  } = await E(aliceLoanSeat).getOfferResult();
+  } = await legacyOfferResult(aliceLoanSeat);
 
   const aliceDebtAmount = await E(aliceVault).getCurrentDebt();
   const fee = ceilMultiplyBy(aliceLoanAmount, rates.loanFee);
@@ -1803,7 +1827,7 @@ test('mutable liquidity triggers and interest', async t => {
   const {
     vault: bobVault,
     publicNotifiers: { vault: bobNotifier },
-  } = await E(bobLoanSeat).getOfferResult();
+  } = await legacyOfferResult(bobLoanSeat);
 
   const bobDebtAmount = await E(bobVault).getCurrentDebt();
   const bobFee = ceilMultiplyBy(bobLoanAmount, rates.loanFee);
@@ -2055,7 +2079,7 @@ test('close loan', async t => {
   const {
     vault: aliceVault,
     publicNotifiers: { vault: aliceNotifier },
-  } = await E(aliceLoanSeat).getOfferResult();
+  } = await legacyOfferResult(aliceLoanSeat);
 
   const debtAmount = await E(aliceVault).getCurrentDebt();
   const fee = ceilMultiplyBy(aliceLoanAmount, rates.loanFee);
@@ -2291,7 +2315,7 @@ test('mutable liquidity sensitivity of triggers and interest', async t => {
   const {
     vault: aliceVault,
     publicNotifiers: { vault: aliceNotifier },
-  } = await E(aliceLoanSeat).getOfferResult();
+  } = await legacyOfferResult(aliceLoanSeat);
 
   const aliceDebtAmount = await E(aliceVault).getCurrentDebt();
   const fee = ceilMultiplyBy(aliceLoanAmount, rates.loanFee);
@@ -2332,7 +2356,7 @@ test('mutable liquidity sensitivity of triggers and interest', async t => {
   const {
     vault: bobVault,
     publicNotifiers: { vault: bobNotifier },
-  } = await E(bobLoanSeat).getOfferResult();
+  } = await legacyOfferResult(bobLoanSeat);
 
   const bobDebtAmount = await E(bobVault).getCurrentDebt();
   const bobFee = ceilMultiplyBy(bobLoanAmount, rates.loanFee);
